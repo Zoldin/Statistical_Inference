@@ -1,0 +1,129 @@
+---
+title: "Exponential distribution"
+author: "Marija Zoldin"
+date: "04.07.2015"
+output: pdf_document
+---
+### Overview
+Exponential distribution is a probability distribution with density defined as :
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+$$
+  f(n) = \left\{\def\arraystretch{1.2}%
+  \begin{array}{@{}c@{\quad}l@{}}
+    \lambda \times e^{- \lambda \times x} & \text{if $x>=0$ }\\
+    0 & \text{if $x<0$}\\
+  \end{array}\right.
+$$
+
+Exponential distribution mean is defined as $\frac{1}{\lambda}$ and standard deviation (square root of the variance) is equal to the mean. 
+As part of course project on Statistical inference Coursera class our task was to made a simulation of 1000 exponential distributions (each distribution contains 40 elements) and explore a relationship between sample means and population mean, sample variances and population variance. Our goal was to use during this assignment basic knowledge that we learned on this course – knowledge related to distribution of averages and central limit theorem.
+
+### Exponential distribution simulation and central limit theorem
+
+From the density distribution formula presented above it can be concluded that distribution is not normal. Two random exponential distribution of 40 and 400 elements were made via statistical language R and their distribution is presented on the graph below:
+
+
+```{r, echo=FALSE}
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+```
+
+
+```{r}
+library(ggplot2)    
+set.seed(123)
+rexp_1<-data.frame(rexp=rexp(40,rate=0.2))
+rexp_2<-data.frame(rexp=rexp(1000,rate=0.2))
+r1<-ggplot(data=rexp_1, aes(rexp)) + geom_histogram(binwidth=1,aes(y = ..density..),fill="darkblue")+ theme_bw()+ggtitle("Exp. distribution of 40 elements")+theme(plot.title = element_text(size = 10))
+r2<-ggplot(data=rexp_2, aes(rexp)) + geom_histogram(binwidth=1,aes(y = ..density..),fill="darkblue")+ theme_bw()+ggtitle("Exp. distribution of 1000 elements")+theme(plot.title = element_text(size = 10))
+multiplot(r1,r2,cols=2)
+```
+
+
+In the next step 1000 exponential distributions of 40 elements were simulated and for each of the 1000 distributions average values and variances were calculated. Because of the fact that we know that mean of averages has the distribution that is centered around population mean (which is $\frac{1}{\lambda}=5$ ) we plotted distribution of the averages to convince ourselves in that fact:
+
+```{r}
+mns = NULL
+for (i in 1 : 1000) mns = c(mns, mean(rexp(40,rate=0.2)))
+mns_1<-data.frame(mns)
+ggplot(data=mns_1, aes(mns)) + geom_histogram(binwidth=0.3,aes(y = ..density..),fill="darkblue",colour="white")+ geom_density(color="purple",size=2)+
+  theme_bw()+
+  ggtitle("Averages of 1000 simulations (exp.distribution of 40 elements)")+labs(x="Averages of 1000 exponential distributions")+
+  scale_x_continuous(breaks=seq(1,10,0.5))+ geom_vline(x=5,color="red",size=2)+theme(plot.title = element_text(size = 10))
+```
+
+We can see from the plot above that the distribution of averages is normal, centered around 5 (which is population mean).
+
+Also distribution of the variances was examined. It was expected that distribution of variances will be centered around population variance – for larger sample size estimation will be better. Because of that fact two simulation of 1000 distributions were made – one were each distribution contained 40 element and one for which each of the 1000 distributions contained 1000 elements. From the plot below it can be seen that with size of 1000 elements in each distribution estimation of the population variance was much better. 
+
+```{r}
+vars = NULL
+vars2=NULL
+set.seed(123)
+for (i in 1 : 1000) vars = c(vars, var(rexp(40,rate=0.2)))
+for (i in 1 : 1000) vars2 = c(vars2, var(rexp(1000,rate=0.2)))
+vars_1<-data.frame(vars)
+vars_2<-data.frame(vars2)
+p1<-ggplot(data=vars_1, aes(vars)) + geom_histogram(binwidth=0.3,aes(y = ..density..),fill="darkblue",colour="white")+ geom_density(color="purple",size=2)+
+  theme_bw()+
+  ggtitle("Variances of 1000 simulations (exp.distr. of 40 elements)")+labs(x="Variances of 1000 exp. distr.")+
+  geom_vline(x=25,color="red",size=2)+ scale_x_continuous(breaks=seq(0,80,5))+theme(plot.title = element_text(size = 10))
+p2<-ggplot(data=vars_2, aes(vars2)) + geom_histogram(binwidth=0.3,aes(y = ..density..),fill="darkblue",colour="white")+ geom_density(color="purple",size=2)+
+  theme_bw()+
+  ggtitle("Variances of 1000 simulations (exp.dist. of 1000 el.)")+labs(x="Variances of 1000 exp. distr.")+
+ geom_vline(x=25,color="red",size=2)+theme(plot.title = element_text(size = 10))
+multiplot(p1,p2)
+```
+
+Central limit theorem was applied on the 1000 exp. distributions simulations with 40 elements.
+From each average value (of each distribution) population mean was subtracted and divided by standard error of the mean. By the central limit theorem distribution of calculated values needs to be standard normal distributed (with mean 0). From the plot below it can be noticed that distribution is std. normal with mean 0.
+
+```{r}
+mu=5
+sigma=5
+
+for_std_normal=((mns-mu)/(sigma/sqrt(1000)))
+for_std<-data.frame(x_clt=for_std_normal)
+ggplot(data=for_std, aes(x_clt)) + geom_histogram(binwidth=0.3,aes(y = ..density..),fill="darkblue",colour="white")+ geom_density(color="purple",size=2)+
+theme_bw()+
+ggtitle(" CLT - simulation of 1000 exponential distributions") + labs(x="(mu-sigma)/(population_sd/sqrt(n))")+ geom_vline(x=0,color="red",size=2)+theme(plot.title = element_text(size = 10))
+```
+
