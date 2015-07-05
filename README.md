@@ -9,7 +9,6 @@ content of this repository:
     
     course_project_simulation.rmd - R markdown code that was used for course_project_simulation.pdf creation
     
-    
     course_project_simulation.pdf - exponential distribution (simulations and explanations)
     
     
